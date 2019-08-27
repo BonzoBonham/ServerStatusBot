@@ -1,0 +1,24 @@
+{
+  "name": "serverstatusbot",
+  "version": "1.0.0",
+  "description": "ServerStatusBot",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BonzoBonham/ServerStatusBot.git"
+  },
+  "author": "Nicolás Pérez",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BonzoBonham/ServerStatusBot/issues"
+  },
+  "homepage": "https://github.com/BonzoBonham/ServerStatusBot#readme",
+  "dependencies": {
+    "discord.js": "^11.5.1",
+    "gamedig": "^2.0.14",
+    "request": "^2.88.0"
+  }
+}
