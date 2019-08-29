@@ -85,7 +85,7 @@ const getActivePlayers = (delimiter = ", \n", server) =>
 
 //function that takes STARTUP_MESSAGE, a channel ID and a server object, and edits the 
 //MUST BE CALLED AFTER QUERY
-const textchannelupdate = (message, channelid, server) =>
+const tChannelUpdate = (message, channelid, server) =>
     getActivePlayers(server)
         .then(players => {
             let channel = bot.channels.get(channelid)
