@@ -41,6 +41,7 @@ process.on("unhandledRejection", function (err, promise) {
 });
 
 //function that takes a server object (type, host) and returns the server's info
+//MUST BE CALLED AFTER QUERY
 const handleGamedigQuery = function (server) {
     new Promise(resolve => {
         return Gamedig.query(server)
@@ -51,17 +52,13 @@ const handleGamedigQuery = function (server) {
     });
 }
 
-const vChannelUpdate = function (server) {
+//function that takes a discord channel id and a server object, and updates its name with server info
+//MUST BE CALLED AFTER QUERY
+const vChannelUpdate = function (channelid, server) {
     handleGamedigQuery(server)
         .then(state => {
             var status = state.players.length + " in " + state.map;
-
-            //THE STATUS CHANNEL IS QUERIED TO THE DATABASE, THIS IS WRONG
-
-            //let statuschannel = bot.channels.get(VOICE_CHANNEL);
-
-            //CHANGE STATUS CHANNEL GET FUNCTION
-
+            let statuschannel = bot.channels.get(channelid);
             statuschannel.setName(status);
             console.log("Server status updated!");
             Promise.resolve();
@@ -70,3 +67,6 @@ const vChannelUpdate = function (server) {
 }
 
 
+
+//HANDLEGAMEDIGQUERY IS CALLED AFTER THE QUERY FOR THE SERVER HAS BEEN MADE, AND
+//I HAVE THE DATA FOR THAT GUILD AND ITS SERVERS. 
