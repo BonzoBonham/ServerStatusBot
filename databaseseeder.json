@@ -1,0 +1,21 @@
+{
+    "name": "SSS",
+    "discordid": "61231237",
+    "prefix": "!",
+    "servers": [
+        {
+            "name": "DMG TTT",
+            "type": "garrysmod",
+            "host": "66.151.244.2",
+            "vchannelid": "616413849679036530",
+            "tchannelid": "616414488916393984"
+        },
+        {
+            "name": "DMG Potpourri",
+            "type": "garrysmod",
+            "host": "192.223.27.68",
+            "vchannelid": "616415352271667232",
+            "tchannelid": "616415277713981441"
+        }
+    ]
+}
