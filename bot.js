@@ -40,5 +40,33 @@ process.on("unhandledRejection", function (err, promise) {
     );
 });
 
+//function that takes a server object (type, host) and returns the server's info
+const handleGamedigQuery = function (server) {
+    new Promise(resolve => {
+        return Gamedig.query(server)
+            .then(resolve)
+            .catch(error => {
+                console.log("Server is offline!");
+            });
+    });
+}
+
+const vChannelUpdate = function (server) {
+    handleGamedigQuery(server)
+        .then(state => {
+            var status = state.players.length + " in " + state.map;
+
+            //THE STATUS CHANNEL IS QUERIED TO THE DATABASE, THIS IS WRONG
+
+            //let statuschannel = bot.channels.get(VOICE_CHANNEL);
+
+            //CHANGE STATUS CHANNEL GET FUNCTION
+
+            statuschannel.setName(status);
+            console.log("Server status updated!");
+            Promise.resolve();
+        })
+        .catch(console.error);
+}
 
 
