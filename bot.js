@@ -113,6 +113,46 @@ const tChannelUpdate = (message, channelid, server) =>
         })
         .catch(console.error);
 
+//function that returns the prefix of a guild
+const getPrefix = function () {
+
+}
+
+//function that creates and returns a server object
+const createServerObject = function () {
+
+}
+
+//function that queries the DB and returns the current guild's info as a JSON
+const guildQuery = function () {
+
+}
+
+//message handler for every
+const handleMessage = message => {
+    if (
+        message === undefined || // Message must exist
+        message.author.bot || // Message must not be from the bot
+        message.channel.type === "dm" || // message must not be a dm
+        message.content[0] !== getPrefix() // Message must contain the assumed prefix
+    )
+        return;
+
+    let messageArray = message.content.split(" ");
+    let cmd = messageArray[0];
+    let args = messageArray.slice(1);
+
+    // Allow l/u-case commands. Return an error if the command is invalid
+    if (
+        !Object.values(MESSAGE_CODES)
+            .map(code => prefix + code.toLowerCase())
+            .find(code => code === cmd.toLowerCase())
+    ) {
+        console.log("Sorry! We didn't recognize that command.");
+        //message.channel.send("Sorry! We didn't recognize that command.");
+    }
+
+
 //HANDLEGAMEDIGQUERY IS CALLED AFTER THE QUERY FOR THE SERVER HAS BEEN MADE, AND
 //I HAVE THE DATA FOR THAT GUILD AND ITS SERVERS. 
 //SERVER OBJECT: (TYPE, HOST)
