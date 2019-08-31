@@ -115,7 +115,7 @@ const tChannelUpdate = (message, channelid, server) =>
 
 //function that returns the prefix of a guild
 const getPrefix = function () {
-
+    return "!" //just for testing purposes
 }
 
 //function that creates and returns a server object
@@ -128,7 +128,7 @@ const guildQuery = function () {
 
 }
 
-//message handler for every
+//message handler for commands
 const handleMessage = message => {
     if (
         message === undefined || // Message must exist
@@ -148,8 +148,14 @@ const handleMessage = message => {
             .map(code => prefix + code.toLowerCase())
             .find(code => code === cmd.toLowerCase())
     ) {
-        console.log("Sorry! We didn't recognize that command.");
+        console.log("unrecognized command entered. I will ignore it 8)");
         //message.channel.send("Sorry! We didn't recognize that command.");
+    }
+
+    if (cmd === `${getPrefix()}${CREDITS}`) {
+        message.channel.send(
+            "I was made by Bonzo"
+        );
     }
 
 
