@@ -10,3 +10,6 @@ Currently, it only supports Garry's Mod, but many more games are planned for the
 - Invite: post the current info of the server in the channel, along with a direct connection link.
 - Add: Simply add more servers to track using a single command.
 - Remove: Stop tracking a server's status.
+
+## Planned features:
+- Allow different message prefix per server.
