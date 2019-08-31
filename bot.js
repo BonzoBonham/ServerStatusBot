@@ -216,8 +216,12 @@ const handleMessage = async message => {
         //add server to database array
         console.log("Updating servers info...");
         Guild.findOneAndUpdate({ discordid: currentGuildID }, { $push: { servers: newServer } })
-            .then(console.log("Info updated and uploaded!"))
+            .then(() => {
+                console.log("Info updated and uploaded!")
+                message.channel.send("Tracking channels created! Remember to not change their names!")
+            })
             .catch(console.error)
+
 
     }
 
