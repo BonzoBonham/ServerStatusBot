@@ -1,8 +1,9 @@
 const Discord = require("discord.js");
 const Gamedig = require("gamedig");
 //const fs = require("fs");
-const mongoose = require("mongoose")
-const Guild = require("./schemas.js")
+const mongoose = require("mongoose");
+const Guild = require("./schemas.js");
+const { token } = require("./temp.json");
 
 //Create bot instance
 const bot = new Discord.Client({ disableEveryone: true });
@@ -56,6 +57,20 @@ const handleGamedigQuery = function (server) {
     });
 }
 
+//function takes a server object, and returns a list of active players in separate lines
+//MUST BE CALLED AFTER QUERY
+const getActivePlayers = (delimiter = ", \n", server) =>
+    handleGamedigQuery(server)
+        .then(state => {
+            return Promise.resolve(
+                state.players.length
+                    ? state.players.map(ply => ply.name).join(delimiter)
+                    : ""
+            );
+        })
+        .catch(console.error);
+
+
 //function that takes a discord channel id and a server object, and updates its name with server info
 //MUST BE CALLED AFTER QUERY
 const vChannelUpdate = function (channelid, server) {
@@ -69,19 +84,6 @@ const vChannelUpdate = function (channelid, server) {
         })
         .catch(console.error);
 }
-
-//function takes a server object, and returns a list of active players in separate lines
-//MUST BE CALLED AFTER QUERY
-const getActivePlayers = (delimiter = ", \n", server) =>
-    handleGamedigQuery(server)
-        .then(state => {
-            return Promise.resolve(
-                state.players.length
-                    ? state.players.map(ply => ply.name).join(delimiter)
-                    : ""
-            );
-        })
-        .catch(console.error);
 
 //function that takes STARTUP_MESSAGE, a channel ID and a server object, and edits the 
 //MUST BE CALLED AFTER QUERY
@@ -144,20 +146,32 @@ const handleMessage = message => {
 
     // Allow l/u-case commands. Return an error if the command is invalid
     if (
-        !Object.values(MESSAGE_CODES)
-            .map(code => prefix + code.toLowerCase())
+        !Object.values(COMMANDS)
+            .map(code => getPrefix() + code.toLowerCase())
             .find(code => code === cmd.toLowerCase())
     ) {
         console.log("unrecognized command entered. I will ignore it 8)");
         //message.channel.send("Sorry! We didn't recognize that command.");
     }
 
-    if (cmd === `${getPrefix()}${CREDITS}`) {
+    if (cmd === `${getPrefix()}${COMMANDS.CREDITS}`) {
         message.channel.send(
             "I was made by Bonzo"
         );
     }
+}
 
+//Sets the "game" being played by the bot every 30 seconds
+bot.on("ready", () => {
+    console.log(`${bot.user.username} is online!`);
+    console.log("I am ready!");
+});
+
+// Handle messages
+bot.on("message", handleMessage);
+
+// Login using the bot.
+bot.login(token ? token : process.env.BOT_TOKEN); //BOT_TOKEN is the Client Secret
 
 //HANDLEGAMEDIGQUERY IS CALLED AFTER THE QUERY FOR THE SERVER HAS BEEN MADE, AND
 //I HAVE THE DATA FOR THAT GUILD AND ITS SERVERS. 
