@@ -17,7 +17,7 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
     console.log("Connected to MongoDB!")
-    Guild.find({ name: "SSS" }).exec((err, data) => { console.log(JSON.stringify(data)) }) //test query
+    //Guild.find({ name: "SSS" }).exec((err, data) => { console.log(JSON.stringify(data)) }) //test query
 });
 
 //List of supported commands
@@ -32,6 +32,7 @@ const COMMANDS = {
 //Important constants
 const STARTUP_MESSAGE_PLAYERS_KEY = "**ONLINE PLAYERS**";
 const STARTUP_MESSAGE = "-------------------------"
+const DEFAULT_UPDATE_INTERVAL = 30000; // Thirty seconds
 
 // Handle potential uncaught errors resulting from dependencies. (thanks, john!)
 process.on("unhandledRejection", function (err, promise) {
@@ -50,20 +51,16 @@ process.on("unhandledRejection", function (err, promise) {
 
 //function that takes a server object (type, host) and returns the server's info
 //MUST BE CALLED AFTER QUERY
-const handleGamedigQuery = function (server) {
-    new Promise(resolve => {
-        return Gamedig.query(server)
-            .then(resolve)
-            .catch(error => {
-                console.log("Server is offline!");
-            });
-    });
-}
+const handleGamedigQuery = (server) =>
+    Gamedig.query(server)
+        .catch(error => {
+            console.log("Server is offline");
+        });
 
 //function takes a server object, and returns a list of active players in separate lines
 //MUST BE CALLED AFTER QUERY
-const getActivePlayers = (delimiter = ", \n", server) =>
-    handleGamedigQuery(server)
+const getActivePlayers = (delimiter = ", \n", server) => {
+    return handleGamedigQuery(server)
         .then(state => {
             return Promise.resolve(
                 state.players.length
@@ -72,6 +69,7 @@ const getActivePlayers = (delimiter = ", \n", server) =>
             );
         })
         .catch(console.error);
+}
 
 
 //function that takes a discord channel id and a server object, and updates its name with server info
@@ -94,8 +92,8 @@ const pushServer = function (server) {
 
 //function that takes STARTUP_MESSAGE, a channel ID and a server object, and edits the 
 //MUST BE CALLED AFTER QUERY
-const tChannelUpdate = (message, channelid, server) =>
-    getActivePlayers(server)
+const tChannelUpdate = (message, channelid, server) => {
+    return getActivePlayers(", \n", server)
         .then(players => {
             let channel = bot.channels.get(channelid)
             return channel.fetchMessages().then(messages => {
@@ -109,11 +107,12 @@ const tChannelUpdate = (message, channelid, server) =>
                     .map(msg => msg[1])
                     .filter(
                         ({ author, content }) =>
-                            content.includes(STARTUP_MESSAGE_PLAYERS_KEY) && author.bot
+                            content.includes(STARTUP_MESSAGE) && author.bot
                     );
 
+                console.log(sortedMessages)
                 let lastMessage = sortedMessages[sortedMessages.length - 1];
-
+                console.log(lastMessage)
                 // If the startup message is not in the list, send the message. Otherwise edit it.
                 return !lastMessage
                     ? channel.send(message + "\n" + players)
@@ -121,6 +120,7 @@ const tChannelUpdate = (message, channelid, server) =>
             });
         })
         .catch(console.error);
+}
 
 //function that returns the prefix of a guild
 const getPrefix = function () {
@@ -133,8 +133,12 @@ const createServerObject = function () {
 }
 
 //function that queries the DB and returns the current guild's info as a JSON
-const guildQuery = function () {
-
+const guildQuery = function (serverid) {
+    Guild.find({ discordid: serverid })
+        .exec((err, data) => {
+            if (err) { console.error; return; };
+            return data;
+        })
 }
 
 //message handler for commands
@@ -200,6 +204,7 @@ const handleMessage = async message => {
         await currentGuild.createChannel(tChannelName, { type: "text" })
             .then(textchan => {
                 tChannelID = textchan.id;
+                textchan.send("Initializing...")
             })
             .catch(() => console.log('Failed to create text channel'))
 
@@ -275,11 +280,34 @@ const handleMessage = async message => {
 }
 
 
+const updateTextChannel = (channel, server) =>
+    tChannelUpdate(STARTUP_MESSAGE, bot.channels.get(channel).id, server)
 
-//Sets the "game" being played by the bot every 30 seconds
+
+
+//Sets the bot activity
 bot.on("ready", () => {
     console.log(`${bot.user.username} is online!`);
     console.log("I am ready!");
+
+    // After we send the first text-status message, set the loop.
+    //query every guild in database
+    //for each guild in the database
+    //  for each server in the guild    
+    //      set update interval and loop.
+
+    Guild.find().exec((err, data) => {
+        data.forEach(guild => {
+            gServers = guild.servers
+            gServers.forEach((server) => {
+                let serverObject = { type: server.type, host: server.host }
+                updateTextChannel(server.tchannelid, serverObject)
+                    .then(bot.setInterval(updateTextChannel, DEFAULT_UPDATE_INTERVAL, server.tchannelid, serverObject))
+                bot.setInterval(vChannelUpdate, DEFAULT_UPDATE_INTERVAL, server.vchannelid, serverObject);
+                bot.setInterval(tChannelUpdate, DEFAULT_UPDATE_INTERVAL, STARTUP_MESSAGE, server.tchannelid, serverObject);
+            })
+        })
+    })
 });
 
 // Handle messages

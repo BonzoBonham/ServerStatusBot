@@ -4,14 +4,14 @@
     "prefix": "!",
     "servers": [
         {
-            "name": "DMG TTT",
+            "name": "DMGTTT",
             "type": "garrysmod",
             "host": "66.151.244.2",
             "vchannelid": "616413849679036530",
             "tchannelid": "616414488916393984"
         },
         {
-            "name": "DMG Potpourri",
+            "name": "DMGPOT",
             "type": "garrysmod",
             "host": "192.223.27.68",
             "vchannelid": "616415352271667232",
