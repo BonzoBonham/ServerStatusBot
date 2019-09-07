@@ -11,6 +11,9 @@ For the list of supported games, read https://www.npmjs.com/package/gamedig. If 
 - Remove: Stop tracking a server's status.
 
 ## Planned features:
-- Allow different message prefix per Discord Guild
+- Allow different message prefix per Discord Guild.
 - Invite: post the current info of the server in the channel, along with a direct connection link.
 
+## Thanks to:
+- @TractJ for helping me create the first version of this bot, and helping me not suck as hard.
+- The /r/Discord_Bots community for their massive help in solving my newbie questions.
