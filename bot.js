@@ -319,7 +319,7 @@ bot.on("ready", () => {
 bot.on("message", handleMessage);
 
 // Login using the bot.
-bot.login(token ? token : process.env.BOT_TOKEN); //BOT_TOKEN is the Client Secret
+bot.login(token ? token : process.env.BOT_TOKEN); //Super ultra secret code shhhhh
 
 //everytime the bot joins a different guild:
 bot.on("guildCreate", (guild) => {
