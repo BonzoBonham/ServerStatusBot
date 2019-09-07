@@ -17,7 +17,6 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
     console.log("Connected to MongoDB!")
-    //Guild.find({ name: "SSS" }).exec((err, data) => { console.log(JSON.stringify(data)) }) //test query
 });
 
 //List of supported commands
@@ -30,7 +29,6 @@ const COMMANDS = {
 }
 
 //Important constants
-const STARTUP_MESSAGE_PLAYERS_KEY = "**ONLINE PLAYERS**";
 const STARTUP_MESSAGE = "-------------------------"
 const DEFAULT_UPDATE_INTERVAL = 30000; // Thirty seconds
 
@@ -110,9 +108,7 @@ const tChannelUpdate = (message, channelid, server) => {
                             content.includes(STARTUP_MESSAGE) && author.bot
                     );
 
-                console.log(sortedMessages)
                 let lastMessage = sortedMessages[sortedMessages.length - 1];
-                console.log(lastMessage)
                 // If the startup message is not in the list, send the message. Otherwise edit it.
                 return !lastMessage
                     ? channel.send(message + "\n" + players)
@@ -283,12 +279,7 @@ const handleMessage = async message => {
 const updateTextChannel = (channel, server) =>
     tChannelUpdate(STARTUP_MESSAGE, bot.channels.get(channel).id, server)
 
-
-
-//Sets the bot activity
-bot.on("ready", () => {
-    console.log(`${bot.user.username} is online!`);
-    console.log("I am ready!");
+const updateLoop = () => {
 
     // After we send the first text-status message, set the loop.
     //query every guild in database
@@ -301,13 +292,26 @@ bot.on("ready", () => {
             gServers = guild.servers
             gServers.forEach((server) => {
                 let serverObject = { type: server.type, host: server.host }
-                updateTextChannel(server.tchannelid, serverObject)
-                    .then(bot.setInterval(updateTextChannel, DEFAULT_UPDATE_INTERVAL, server.tchannelid, serverObject))
-                bot.setInterval(vChannelUpdate, DEFAULT_UPDATE_INTERVAL, server.vchannelid, serverObject);
-                bot.setInterval(tChannelUpdate, DEFAULT_UPDATE_INTERVAL, STARTUP_MESSAGE, server.tchannelid, serverObject);
+                //updateTextChannel(server.tchannelid, serverObject)
+                vChannelUpdate(server.vchannelid, serverObject);
+                tChannelUpdate(STARTUP_MESSAGE, server.tchannelid, serverObject)
+
+                //updateTextChannel(server.tchannelid, serverObject)
+                //.then(bot.setInterval(updateTextChannel, DEFAULT_UPDATE_INTERVAL, server.tchannelid, serverObject))
+                //bot.setInterval(vChannelUpdate, DEFAULT_UPDATE_INTERVAL, server.vchannelid, serverObject);
+                //bot.setInterval(tChannelUpdate, DEFAULT_UPDATE_INTERVAL, STARTUP_MESSAGE, server.tchannelid, serverObject);
             })
         })
     })
+}
+
+
+//Sets the bot activity
+bot.on("ready", () => {
+    console.log(`${bot.user.username} is online!`);
+    console.log("I am ready!");
+
+    bot.setInterval(updateLoop, DEFAULT_UPDATE_INTERVAL)
 });
 
 // Handle messages
@@ -316,6 +320,20 @@ bot.on("message", handleMessage);
 // Login using the bot.
 bot.login(token ? token : process.env.BOT_TOKEN); //BOT_TOKEN is the Client Secret
 
-//HANDLEGAMEDIGQUERY IS CALLED AFTER THE QUERY FOR THE SERVER HAS BEEN MADE, AND
-//I HAVE THE DATA FOR THAT GUILD AND ITS SERVERS. 
-//SERVER OBJECT: (TYPE, HOST)
+//everytime the bot joins a different guild:
+bot.on("guildCreate", (guild) => {
+
+    //create Guild model
+    let newGuild = {
+        name: guild.name,
+        discordid: guild.id,
+        prefix: "!",
+        servers: []
+    }
+
+    //save the model
+    newGuild.save(function (err, guild) {
+        if (err) return console.error(err);
+        console.log(guild.name + " saved to Guild collection.");
+    });
+})
