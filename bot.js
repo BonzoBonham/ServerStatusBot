@@ -173,7 +173,16 @@ const handleMessage = async message => {
     //command that DM's the help for the bot to the user
     if (cmd === `${getPrefix()}${COMMANDS.HELP}`) {
         message.channel.send(
-            "I was made by Bonzo"
+            `
+Hello! Thanks for installing the Server Status Bot! Here's a list of commands, and their usage.
+
+***IMPORTANT NOTICE:*** **DO NOT Change the names of the channels created by the Bot. This will interfere with its functionality and will break things! **
+
+**- !addserver <name> <hostcode> <ip>:** Add a server to the track list. The name must be a single word, and it's recommended that it's in lowercase letters. The hostcode is the GameDig Type ID shown here: https://www.npmjs.com/package/gamedig. The IP is whatever your server's IP is.
+**- !removeserver <name>:** Remove a server from the track list. The name used here MUST be the same name you gave the server when you first added to the track list, or else the Bot will not find it. HINT: The first word of the player list channel name is almost always the server name.
+**- !credits:** Display the credits for the Bot.
+**- !help:** Display this help message again.
+`
         );
     }
 
@@ -327,6 +336,7 @@ bot.on("ready", () => {
     console.log(`${bot.user.username} is online!`);
     console.log("I am ready!");
 
+    bot.user.setActivity("!help", { type: "PLAYING" });
     bot.setInterval(updateLoop, DEFAULT_UPDATE_INTERVAL)
 });
 
