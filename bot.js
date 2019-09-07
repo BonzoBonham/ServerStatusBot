@@ -49,10 +49,11 @@ process.on("unhandledRejection", function (err, promise) {
 
 //function that takes a server object (type, host) and returns the server's info
 //MUST BE CALLED AFTER QUERY
-const handleGamedigQuery = (server) =>
+const handleGamedigQuery = async (server) =>
     Gamedig.query(server)
         .catch(error => {
             console.log("Server is offline");
+            return -1
         });
 
 //function takes a server object, and returns a list of active players in separate lines
@@ -195,6 +196,17 @@ const handleMessage = async message => {
         let vChannelID;
         let currentGuild = message.guild;
         let currentGuildID = currentGuild.id;
+        var exitFlag
+
+        await handleGamedigQuery({ type: gameType, host: serverIP }).then((data => {
+            exitFlag = data;
+        }))
+
+        if (exitFlag == -1) {
+            console.log("Invalid server data. Aborting...")
+            message.channel.send("Invalid server details provided! Check that you didn't get any of the fields wrong, and that your server is online!")
+            return;
+        }
 
         //create text channel
         await currentGuild.createChannel(tChannelName, { type: "text" })
@@ -290,17 +302,21 @@ const updateLoop = () => {
     Guild.find().exec((err, data) => {
         data.forEach(guild => {
             gServers = guild.servers
-            gServers.forEach((server) => {
-                let serverObject = { type: server.type, host: server.host }
-                //updateTextChannel(server.tchannelid, serverObject)
-                vChannelUpdate(server.vchannelid, serverObject);
-                tChannelUpdate(STARTUP_MESSAGE, server.tchannelid, serverObject)
+            if (typeof gServers !== 'undefined' && gServers.length > 0) { //array exists and has at least one element
+                gServers.forEach((server) => {
+                    let serverObject = { type: server.type, host: server.host }
+                    //updateTextChannel(server.tchannelid, serverObject)
+                    vChannelUpdate(server.vchannelid, serverObject);
+                    tChannelUpdate(STARTUP_MESSAGE, server.tchannelid, serverObject)
 
-                //updateTextChannel(server.tchannelid, serverObject)
-                //.then(bot.setInterval(updateTextChannel, DEFAULT_UPDATE_INTERVAL, server.tchannelid, serverObject))
-                //bot.setInterval(vChannelUpdate, DEFAULT_UPDATE_INTERVAL, server.vchannelid, serverObject);
-                //bot.setInterval(tChannelUpdate, DEFAULT_UPDATE_INTERVAL, STARTUP_MESSAGE, server.tchannelid, serverObject);
-            })
+                    //updateTextChannel(server.tchannelid, serverObject)
+                    //.then(bot.setInterval(updateTextChannel, DEFAULT_UPDATE_INTERVAL, server.tchannelid, serverObject))
+                    //bot.setInterval(vChannelUpdate, DEFAULT_UPDATE_INTERVAL, server.vchannelid, serverObject);
+                    //bot.setInterval(tChannelUpdate, DEFAULT_UPDATE_INTERVAL, STARTUP_MESSAGE, server.tchannelid, serverObject);
+                })
+            } else {
+                console.log("The array is empty, ignoring it...")
+            }
         })
     })
 }
@@ -324,16 +340,27 @@ bot.login(token ? token : process.env.BOT_TOKEN); //BOT_TOKEN is the Client Secr
 bot.on("guildCreate", (guild) => {
 
     //create Guild model
-    let newGuild = {
+    let newGuild = new Guild({
         name: guild.name,
         discordid: guild.id,
         prefix: "!",
-        servers: []
-    }
+    })
+
 
     //save the model
     newGuild.save(function (err, guild) {
         if (err) return console.error(err);
         console.log(guild.name + " saved to Guild collection.");
     });
+
+    Guild.find().exec((err, data) => {
+        console.log(JSON.stringify(data));
+    })
+})
+
+bot.on("guildDelete", (guild) => {
+    Guild.deleteOne({ discordid: guild.id }, (err) => {
+        if (err) console.error;
+        console.log("Guild left and deleted successfully");
+    })
 })
