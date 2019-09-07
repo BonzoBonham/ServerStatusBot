@@ -9,7 +9,6 @@ const bot = new Discord.Client({ disableEveryone: true });
 
 //fix mongoose warnings
 mongoose.set('useFindAndModify', false);
-//mongoose.set('debug', true);
 
 //connect to status bot DB, handle connection errors
 mongoose.connect('mongodb://localhost/statusbot', { useNewUrlParser: true });
@@ -70,7 +69,6 @@ const getActivePlayers = (delimiter = ", \n", server) => {
         .catch(console.error);
 }
 
-
 //function that takes a discord channel id and a server object, and updates its name with server info
 //MUST BE CALLED AFTER QUERY
 const vChannelUpdate = function (channelid, server) {
@@ -83,10 +81,6 @@ const vChannelUpdate = function (channelid, server) {
             Promise.resolve();
         })
         .catch(console.error);
-}
-
-const pushServer = function (server) {
-
 }
 
 //function that takes STARTUP_MESSAGE, a channel ID and a server object, and edits the 
@@ -121,21 +115,7 @@ const tChannelUpdate = (message, channelid, server) => {
 
 //function that returns the prefix of a guild
 const getPrefix = function () {
-    return "!" //just for testing purposes
-}
-
-//function that creates and returns a server object
-const createServerObject = function () {
-
-}
-
-//function that queries the DB and returns the current guild's info as a JSON
-const guildQuery = function (serverid) {
-    Guild.find({ discordid: serverid })
-        .exec((err, data) => {
-            if (err) { console.error; return; };
-            return data;
-        })
+    return "!" //this should be changed in the future
 }
 
 //message handler for commands
@@ -205,15 +185,17 @@ Hello! Thanks for installing the Server Status Bot! Here's a list of commands, a
         let vChannelID;
         let currentGuild = message.guild;
         let currentGuildID = currentGuild.id;
-        var exitFlag
+        var exitFlag;
 
+        //query provided arguments, to check if that server exists
         await handleGamedigQuery({ type: gameType, host: serverIP }).then((data => {
             exitFlag = data;
         }))
 
+        //if the server doesn't exist, inform user and abort
         if (exitFlag == -1) {
-            console.log("Invalid server data. Aborting...")
-            message.channel.send("Invalid server details provided! Check that you didn't get any of the fields wrong, and that your server is online!")
+            console.log("Invalid server data. Aborting...");
+            message.channel.send("Invalid server details provided! Check that you didn't get any of the fields wrong, and that your server is online!");
             return;
         }
 
@@ -221,9 +203,9 @@ Hello! Thanks for installing the Server Status Bot! Here's a list of commands, a
         await currentGuild.createChannel(tChannelName, { type: "text" })
             .then(textchan => {
                 tChannelID = textchan.id;
-                textchan.send("Initializing...")
+                textchan.send("Initializing...");
             })
-            .catch(() => console.log('Failed to create text channel'))
+            .catch(() => console.log('Failed to create text channel'));
 
         //create voice channel
         await currentGuild.createChannel("Initializing", { type: "voice" })
@@ -296,10 +278,6 @@ Hello! Thanks for installing the Server Status Bot! Here's a list of commands, a
     }
 }
 
-
-const updateTextChannel = (channel, server) =>
-    tChannelUpdate(STARTUP_MESSAGE, bot.channels.get(channel).id, server)
-
 const updateLoop = () => {
 
     // After we send the first text-status message, set the loop.
@@ -314,14 +292,8 @@ const updateLoop = () => {
             if (typeof gServers !== 'undefined' && gServers.length > 0) { //array exists and has at least one element
                 gServers.forEach((server) => {
                     let serverObject = { type: server.type, host: server.host }
-                    //updateTextChannel(server.tchannelid, serverObject)
                     vChannelUpdate(server.vchannelid, serverObject);
                     tChannelUpdate(STARTUP_MESSAGE, server.tchannelid, serverObject)
-
-                    //updateTextChannel(server.tchannelid, serverObject)
-                    //.then(bot.setInterval(updateTextChannel, DEFAULT_UPDATE_INTERVAL, server.tchannelid, serverObject))
-                    //bot.setInterval(vChannelUpdate, DEFAULT_UPDATE_INTERVAL, server.vchannelid, serverObject);
-                    //bot.setInterval(tChannelUpdate, DEFAULT_UPDATE_INTERVAL, STARTUP_MESSAGE, server.tchannelid, serverObject);
                 })
             } else {
                 console.log("The array is empty, ignoring it...")
@@ -336,7 +308,10 @@ bot.on("ready", () => {
     console.log(`${bot.user.username} is online!`);
     console.log("I am ready!");
 
+    //set bot activity
     bot.user.setActivity("!help", { type: "PLAYING" });
+
+    //set update loop 
     bot.setInterval(updateLoop, DEFAULT_UPDATE_INTERVAL)
 });
 
@@ -356,19 +331,17 @@ bot.on("guildCreate", (guild) => {
         prefix: "!",
     })
 
-
     //save the model
     newGuild.save(function (err, guild) {
         if (err) return console.error(err);
         console.log(guild.name + " saved to Guild collection.");
     });
-
-    Guild.find().exec((err, data) => {
-        console.log(JSON.stringify(data));
-    })
 })
 
+//everytime the bot leaves a guild:
 bot.on("guildDelete", (guild) => {
+
+    //delete the document related to that guild
     Guild.deleteOne({ discordid: guild.id }, (err) => {
         if (err) console.error;
         console.log("Guild left and deleted successfully");
