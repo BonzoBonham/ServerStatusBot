@@ -13,3 +13,4 @@ For the list of supported games, read https://www.npmjs.com/package/gamedig. If 
 ## Planned features:
 - Allow different message prefix per Discord Guild
 - Invite: post the current info of the server in the channel, along with a direct connection link.
+
